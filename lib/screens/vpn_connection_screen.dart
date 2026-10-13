@@ -36,7 +36,7 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _glowAnimation = Tween<double>(begin: 6.0, _end: 22.0).animate(
+    _glowAnimation = Tween<double>(begin: 6.0, end: 22.0).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
 

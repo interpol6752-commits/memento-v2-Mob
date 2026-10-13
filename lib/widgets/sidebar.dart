@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../theme/app_theme.dart';
 
 class Sidebar extends StatelessWidget {
@@ -15,15 +14,15 @@ class Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final menuItems = [
-      {'icon': LucideIcons.download, 'title': 'Import Links'},
-      {'icon': LucideIcons.table, 'title': 'Config Table'},
-      {'icon': LucideIcons.shield, 'title': 'VPN Connection'},
-      {'icon': LucideIcons.edit3, 'title': 'Editor'},
-      {'icon': LucideIcons.activity, 'title': 'Config Pinger'},
-      {'icon': LucideIcons.search, 'title': 'IP Scanner'},
-      {'icon': LucideIcons.share2, 'title': 'Export'},
-      {'icon': LucideIcons.heart, 'title': 'Donate ❤️'},
-      {'icon': LucideIcons.mail, 'title': 'Contact Me'},
+      {'icon': Icons.download, 'title': 'Import Links'},
+      {'icon': Icons.table_chart, 'title': 'Config Table'},
+      {'icon': Icons.security, 'title': 'VPN Connection'},
+      {'icon': Icons.edit, 'title': 'Editor'},
+      {'icon': Icons.show_chart, 'title': 'Config Pinger'},
+      {'icon': Icons.search, 'title': 'IP Scanner'},
+      {'icon': Icons.share, 'title': 'Export'},
+      {'icon': Icons.favorite, 'title': 'Donate ❤️'},
+      {'icon': Icons.mail, 'title': 'Contact Me'},
     ];
 
     return Container(
@@ -42,7 +41,7 @@ class Sidebar extends StatelessWidget {
                     color: AppTheme.neonGreen.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(LucideIcons.eye, color: AppTheme.neonGreen),
+                  child: const Icon(Icons.visibility, color: AppTheme.neonGreen),
                 ),
                 const SizedBox(width: 12),
                 const Column(

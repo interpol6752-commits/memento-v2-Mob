@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../theme/app_theme.dart';
 
 class ConfigTableScreen extends StatelessWidget {
@@ -37,7 +36,7 @@ class ConfigTableScreen extends StatelessWidget {
                   final item = configs[index];
                   return ListTile(
                     dense: true,
-                    leading: const Icon(LucideIcons.circleDot, size: 14, color: AppTheme.neonGreen),
+                    leading: const Icon(Icons.circle, size: 10, color: AppTheme.neonGreen),
                     title: Row(
                       children: [
                         Expanded(flex: 3, child: Text(item['name']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),

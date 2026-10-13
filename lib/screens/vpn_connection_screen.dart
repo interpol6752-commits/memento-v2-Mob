@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/config_model.dart';
 import '../services/config_storage.dart';
+import '../services/vpn_service_channel.dart';
 
 class VpnConnectionScreen extends StatefulWidget {
   final VpnConfig? selectedConfig;
@@ -15,12 +16,12 @@ class VpnConnectionScreen extends StatefulWidget {
 class _VpnConnectionScreenState extends State<VpnConnectionScreen>
     with TickerProviderStateMixin {
   bool _isConnected = false;
+  bool _isLoading = false;
   bool _autoFailover = true;
   
   List<VpnConfig> _configs = [];
   VpnConfig? _currentConfig;
 
-  // Контроллеры для анимации дыхания и RGB-перелива
   late AnimationController _glowController;
   late Animation<double> _glowAnimation;
   late AnimationController _rgbController;
@@ -30,7 +31,6 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
     super.initState();
     _loadConfigs();
 
-    // Анимация пульсации (дыхание)
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -40,7 +40,6 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
     );
 
-    // Контроллер для полного RGB-перелива цветов
     _rgbController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 6),
@@ -77,10 +76,32 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
     super.dispose();
   }
 
-  void _toggleConnection() {
-    setState(() {
-      _isConnected = !_isConnected;
-    });
+  // Логика реального подключения к системному VPN
+  Future<void> _toggleConnection() async {
+    if (_currentConfig == null) return;
+
+    setState(() => _isLoading = true);
+
+    if (!_isConnected) {
+      // Вызываем нативный Android VPN Service (выскочит системное окно запроса)
+      final success = await VpnServiceChannel.connect(_currentConfig!);
+      setState(() {
+        _isConnected = success;
+        _isLoading = false;
+      });
+      
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('VPN туннель успешно активирован!'), backgroundColor: AppTheme.neonGreen),
+        );
+      }
+    } else {
+      await VpnServiceChannel.disconnect();
+      setState(() {
+        _isConnected = false;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -95,15 +116,9 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Заголовок
                 const Text(
                   'MEMENTO VPN',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2.0,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2.0),
                 ),
                 const SizedBox(height: 6),
                 const Text(
@@ -112,7 +127,7 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
                 ),
                 const SizedBox(height: 32),
 
-                // Выпадающий список конфигов (выровненный и симметричный)
+                // Выпадающий список конфигов
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -126,41 +141,29 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
                       value: _currentConfig,
                       dropdownColor: AppTheme.cardBg,
                       isExpanded: true,
-                      hint: const Text(
-                        'Select a configuration...',
-                        style: TextStyle(color: Colors.white30, fontSize: 13),
-                      ),
+                      hint: const Text('Select a configuration...', style: TextStyle(color: Colors.white30, fontSize: 13)),
                       items: _configs.map((cfg) {
                         return DropdownMenuItem<VpnConfig>(
                           value: cfg,
-                          child: Text(
-                            '${cfg.name} (${cfg.protocol.name.toUpperCase()})',
-                            style: const TextStyle(color: Colors.white, fontSize: 13),
-                          ),
+                          child: Text('${cfg.name} (${cfg.protocol.name.toUpperCase()})', style: const TextStyle(color: Colors.white, fontSize: 13)),
                         );
                       }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _currentConfig = val;
-                        });
-                      },
+                      onChanged: (val) => setState(() => _currentConfig = val),
                     ),
                   ),
                 ),
                 const SizedBox(height: 48),
 
-                // ИДЕАЛЬНО КРУГЛАЯ RGB / НЕОНОВАЯ КНОПКА ПОДКЛЮЧЕНИЯ
+                // НЕОНОВАЯ RGB КНОПКА С СИСТЕМНЫМ VPN
                 AnimatedBuilder(
                   animation: Listenable.merge([_glowAnimation, _rgbController]),
                   builder: (context, child) {
-                    // Вычисляем текущий цвет для Full RGB перелива
                     final double hue = _rgbController.value * 360;
                     final Color rgbColor = HSVColor.fromAHSV(1.0, hue, 1.0, 1.0).toColor();
-                    
                     final activeColor = _isConnected ? rgbColor : AppTheme.neonGreen;
 
                     return GestureDetector(
-                      onTap: _currentConfig == null ? null : _toggleConnection,
+                      onTap: (_currentConfig == null || _isLoading) ? null : _toggleConnection,
                       child: Container(
                         width: 190,
                         height: 190,
@@ -183,11 +186,13 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(
-                              _isConnected ? Icons.power_settings_new : Icons.shield_outlined,
-                              size: 52,
-                              color: _isConnected ? activeColor : Colors.white70,
-                            ),
+                            _isLoading
+                                ? const SizedBox(width: 40, height: 40, child: CircularProgressIndicator(color: AppTheme.neonGreen, strokeWidth: 3))
+                                : Icon(
+                                    _isConnected ? Icons.power_settings_new : Icons.shield_outlined,
+                                    size: 52,
+                                    color: _isConnected ? activeColor : Colors.white70,
+                                  ),
                             const SizedBox(height: 10),
                             Text(
                               _isConnected ? 'ACTIVE' : 'CONNECT',
@@ -206,7 +211,7 @@ class _VpnConnectionScreenState extends State<VpnConnectionScreen>
                 ),
                 const SizedBox(height: 48),
 
-                // Auto Failover блок (ровный и аккуратный)
+                // Auto Failover блок
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

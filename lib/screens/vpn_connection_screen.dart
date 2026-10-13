@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../theme/app_theme.dart';
 
 class VpnConnectionScreen extends StatelessWidget {
@@ -25,7 +24,7 @@ class VpnConnectionScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(LucideIcons.shieldAlert, color: AppTheme.textMuted, size: 28),
+                const Icon(Icons.shield_outlined, color: AppTheme.textMuted, size: 28),
                 const SizedBox(width: 16),
                 const Text('Disconnected', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 const Spacer(),
@@ -36,7 +35,7 @@ class VpnConnectionScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
                   onPressed: () {},
-                  icon: const Icon(LucideIcons.power, size: 16),
+                  icon: const Icon(Icons.power_settings_new, size: 16),
                   label: const Text('Connect'),
                 ),
               ],
@@ -69,7 +68,7 @@ class VpnConnectionScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Choose a V2Ray config to connect...', style: TextStyle(color: AppTheme.textMuted, fontSize: 13)),
-                            Icon(LucideIcons.chevronDown, size: 16, color: AppTheme.textMuted),
+                            Icon(Icons.keyboard_arrow_down, size: 16, color: AppTheme.textMuted),
                           ],
                         ),
                       ),
@@ -90,7 +89,7 @@ class VpnConnectionScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(children: [
-                        Icon(LucideIcons.checkCircle2, color: AppTheme.neonGreen, size: 16),
+                        Icon(Icons.check_circle_outline, color: AppTheme.neonGreen, size: 16),
                         SizedBox(width: 8),
                         Text('xray-core Ready ✓', style: TextStyle(color: AppTheme.neonGreen, fontWeight: FontWeight.bold, fontSize: 13)),
                       ]),

@@ -1,5 +1,5 @@
 name: memento_vpn
-description: "MEMENTO VPN Client with Dark Neon UI"
+description: A cyberpunk-themed mobile V2Ray / Xray VPN client.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,6 +9,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # Иконки и UI
+  cupertino_icons: ^1.0.8
+
+  # Хранение данных на устройстве
+  shared_preferences: ^2.2.2
+
+  # Сетевые запросы (для подписок и брокеров GitHub)
+  http: ^1.2.0
+
+  # Генерация QR-кодов для обмена конфигами
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

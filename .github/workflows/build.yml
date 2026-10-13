@@ -1,29 +1,43 @@
-name: Build App
+name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
           channel: 'stable'
 
-      - run: flutter pub get
+      - name: Generate Android Platform Files
+        run: flutter create . --platforms=android
 
-      - run: flutter create . --platforms=android
+      - name: Install dependencies
+        run: flutter pub get
 
-      - run: flutter build apk --split-per-abi
+      - name: Build APK
+        run: flutter build apk --split-per-abi
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-apk
-          path: build/app/outputs/flutter-apk/*.apk
+          name: release-apk
+          path: build/app/outputs/flutter-apk/

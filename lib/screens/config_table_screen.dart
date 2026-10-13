@@ -61,7 +61,7 @@ class _ConfigTableScreenState extends State<ConfigTableScreen> {
     );
   }
 
-  // Окно Брокеров (GitHub Репозитории)
+  // Окно Брокеров (GitHub Репозитории) с обработкой ошибок
   void _showBrokersDialog() {
     showDialog(
       context: context,
@@ -72,20 +72,29 @@ class _ConfigTableScreenState extends State<ConfigTableScreen> {
           mainAxisSize: MainAxisSize.min,
           children: BrokerService.defaultBrokers.map((broker) {
             return ListTile(
-              title: Text(broker.name, style: const TextStyle(color: Colors.white)),
+              title: Text(broker.name, style: const TextStyle(color: Colors.white, fontSize: 13)),
+              subtitle: Text(broker.url, style: const TextStyle(color: Colors.white38, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
               trailing: const Icon(Icons.download, color: AppTheme.neonGreen),
               onTap: () async {
                 Navigator.pop(context);
                 setState(() => _isLoading = true);
-                final count = await BrokerService.fetchFromBroker(broker);
+                
+                final result = await BrokerService.fetchFromBroker(broker);
+                final count = result['count'] as int;
+                final error = result['error'] as String?;
+
                 await _loadData();
                 setState(() => _isLoading = false);
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Брокер $broker.name загрузил $count конфигов!'),
-                      backgroundColor: AppTheme.neonGreen,
+                      content: Text(
+                        count > 0 
+                            ? 'Успешно загружено конфигов: $count!' 
+                            : 'Сбой брокера: ${error ?? "Неизвестная ошибка"}',
+                      ),
+                      backgroundColor: count > 0 ? AppTheme.neonGreen : Colors.redAccent,
                     ),
                   );
                 }

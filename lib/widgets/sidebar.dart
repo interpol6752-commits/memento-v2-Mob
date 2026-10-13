@@ -26,72 +26,56 @@ class Sidebar extends StatelessWidget {
     ];
 
     return Container(
-      width: 250,
+      width: 70, // Сделали узкую аккуратную панель только для иконок
       color: AppTheme.sidebarBg,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Логотип (только иконка глаза)
           Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.neonGreen.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.visibility, color: AppTheme.neonGreen),
-                ),
-                const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('MEMENTO', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-                    Text('FROM EPODONIOS TO A WHO', style: TextStyle(fontSize: 7, color: AppTheme.textMuted)),
-                  ],
-                ),
-              ],
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.neonGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.visibility, color: AppTheme.neonGreen, size: 20),
             ),
           ),
           const Divider(color: AppTheme.cardBorder, height: 1),
+          
+          // Список иконок меню без текста
           Expanded(
             child: ListView.builder(
               itemCount: menuItems.length,
               itemBuilder: (context, index) {
                 final isSelected = selectedIndex == index;
                 return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppTheme.neonGreen.withOpacity(0.12) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: isSelected ? Border.all(color: AppTheme.neonGreen.withOpacity(0.3)) : null,
+                    color: isSelected ? AppTheme.neonGreen.withOpacity(0.15) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    border: isSelected ? Border.all(color: AppTheme.neonGreen.withOpacity(0.4)) : null,
                   ),
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(
+                  child: IconButton(
+                    icon: Icon(
                       menuItems[index]['icon'] as IconData,
                       color: isSelected ? AppTheme.neonGreen : AppTheme.textMuted,
-                      size: 18,
+                      size: 20,
                     ),
-                    title: Text(
-                      menuItems[index]['title'] as String,
-                      style: TextStyle(
-                        color: isSelected ? AppTheme.neonGreen : AppTheme.textLight,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        fontSize: 13,
-                      ),
-                    ),
-                    onTap: () => onItemSelected(index),
+                    onPressed: () => onItemSelected(index),
+                    tooltip: menuItems[index]['title'] as String,
                   ),
                 );
               },
             ),
           ),
+
+          // Компактный индикатор конфигов внизу
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(bottom: 12.0),
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppTheme.cardBg,
                 borderRadius: BorderRadius.circular(8),
@@ -99,28 +83,9 @@ class Sidebar extends StatelessWidget {
               ),
               child: const Column(
                 children: [
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('Total Configs', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-                    Text('10', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ]),
-                  SizedBox(height: 6),
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Row(children: [
-                      CircleAvatar(radius: 3, backgroundColor: AppTheme.neonGreen),
-                      SizedBox(width: 6),
-                      Text('Valid', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-                    ]),
-                    Text('10', style: TextStyle(color: AppTheme.neonGreen, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ]),
-                  SizedBox(height: 6),
-                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Row(children: [
-                      CircleAvatar(radius: 3, backgroundColor: Colors.red),
-                      SizedBox(width: 6),
-                      Text('Invalid', style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-                    ]),
-                    Text('0', style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ]),
+                  Icon(Icons.check_circle, color: AppTheme.neonGreen, size: 14),
+                  SizedBox(height: 2),
+                  Text('10', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

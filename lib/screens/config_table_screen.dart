@@ -1,59 +1,175 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_theme.dart';
+import '../models/config_model.dart';
+import '../services/config_storage.dart';
+import '../services/broker_service.dart';
 
-class ConfigTableScreen extends StatelessWidget {
-  const ConfigTableScreen({super.key});
+class ConfigTableScreen extends StatefulWidget {
+  final Function(VpnConfig) onSelectAndConnect;
+
+  const ConfigTableScreen({super.key, required this.onSelectAndConnect});
+
+  @override
+  State<ConfigTableScreen> createState() => _ConfigTableScreenState();
+}
+
+class _ConfigTableScreenState extends State<ConfigTableScreen> {
+  List<VpnConfig> _configs = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final loaded = await ConfigStorage.loadConfigs();
+    setState(() {
+      _configs = loaded;
+    });
+  }
+
+  // Окно генерации QR-кода
+  void _showQrDialog(VpnConfig config) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: Text(config.name, style: const TextStyle(color: Colors.white, fontSize: 16)),
+        content: SizedBox(
+          width: 200,
+          height: 200,
+          child: Center(
+            child: QrImageView(
+              data: config.rawUrl,
+              version: QrVersions.auto,
+              size: 200.0,
+              eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: AppTheme.neonGreen),
+              dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.white),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: AppTheme.neonGreen)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Окно Брокеров (GitHub Репозитории)
+  void _showBrokersDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBg,
+        title: const Text('Select Broker (GitHub)', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: BrokerService.defaultBrokers.map((broker) {
+            return ListTile(
+              title: Text(broker.name, style: const TextStyle(color: Colors.white)),
+              trailing: const Icon(Icons.download, color: AppTheme.neonGreen),
+              onTap: () async {
+                Navigator.pop(context);
+                setState(() => _isLoading = true);
+                final count = await BrokerService.fetchFromBroker(broker);
+                await _loadData();
+                setState(() => _isLoading = false);
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Брокер $broker.name загрузил $count конфигов!'),
+                      backgroundColor: AppTheme.neonGreen,
+                    ),
+                  );
+                }
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final configs = [
-      {'name': 'CA ca | @Raydikalx', 'protocol': 'VLESS', 'address': 'saas.sin.fan', 'port': '443', 'status': 'Valid'},
-      {'name': 'DE de | @Raydikalx', 'protocol': 'TROJAN', 'address': '185.137.157.135', 'port': '443', 'status': 'Valid'},
-      {'name': 'DE de | @Raydikalx', 'protocol': 'TROJAN', 'address': '185.137.157.140', 'port': '443', 'status': 'Valid'},
-      {'name': 'EE ee | @Raydikalx', 'protocol': 'VLESS', 'address': '185.155.97.58', 'port': '45176', 'status': 'Valid'},
-    ];
-
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Config Table', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 6),
-          const Text('Browse every imported config in a powerful table.', style: TextStyle(color: AppTheme.textMuted, fontSize: 13)),
-          const SizedBox(height: 20),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppTheme.cardBg,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.cardBorder),
+          // Шапка и кнопки управления
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Config Table',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              child: ListView.separated(
-                itemCount: configs.length,
-                separatorBuilder: (_, __) => const Divider(color: AppTheme.cardBorder, height: 1),
-                itemBuilder: (context, index) {
-                  final item = configs[index];
-                  return ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.circle, size: 10, color: AppTheme.neonGreen),
-                    title: Row(
-                      children: [
-                        Expanded(flex: 3, child: Text(item['name']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                        Expanded(flex: 2, child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: AppTheme.neonGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                          child: Text(item['protocol']!, style: const TextStyle(color: AppTheme.neonGreen, fontSize: 11), textAlign: TextAlign.center),
-                        )),
-                        Expanded(flex: 3, child: Text(item['address']!, style: const TextStyle(color: AppTheme.textMuted))),
-                        Expanded(flex: 1, child: Text(item['port']!, style: const TextStyle(color: AppTheme.textMuted))),
-                        const Expanded(flex: 1, child: Text('Valid', style: TextStyle(color: AppTheme.neonGreen))),
-                      ],
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _showBrokersDialog,
+                    icon: const Icon(Icons.hub, size: 14),
+                    label: const Text('Brokers'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purpleAccent.withOpacity(0.2),
+                      foregroundColor: Colors.purpleAccent,
+                      side: const BorderSide(color: Colors.purpleAccent),
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
-            ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Список конфигов
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppTheme.neonGreen))
+                : _configs.isEmpty
+                    ? const Center(child: Text('Нет конфигов. Используй Import или Brokers!', style: TextStyle(color: Colors.white30)))
+                    : ListView.builder(
+                        itemCount: _configs.length,
+                        itemBuilder: (context, index) {
+                          final cfg = _configs[index];
+                          return Card(
+                            color: AppTheme.cardBg,
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: AppTheme.cardBorder),
+                            ),
+                            child: ListTile(
+                              title: Text(cfg.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                              subtitle: Text(
+                                '${cfg.protocol.name.toUpperCase()} • ${cfg.address}:${cfg.port}',
+                                style: const TextStyle(color: Colors.white54, fontSize: 11),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.qr_code, color: Colors.white70, size: 18),
+                                    onPressed: () => _showQrDialog(cfg),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.play_arrow, color: AppTheme.neonGreen, size: 20),
+                                    onPressed: () => widget.onSelectAndConnect(cfg),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
